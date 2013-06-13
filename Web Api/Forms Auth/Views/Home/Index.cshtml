@@ -1,0 +1,114 @@
+﻿<div id="body">
+    <div>
+        <button id="getById">Get with Id</button>
+        <button id="getAll">Get All</button>
+    </div>
+    <div id="returnedData" style="margin-top: 20px;">
+    </div>
+    
+    <div id="loginDetails">
+        <fieldset>
+            <legend>Login</legend>
+            <p>
+                <label for="username">Username</label>
+                <input id="username" value="bob" />
+            </p>
+            <p>
+                <label for="password">Password</label>
+                <input id="password" type="password" />
+            </p>
+            <p>
+                <button id="login">login</button>
+            </p>
+        </fieldset>        
+    </div>
+</div>
+
+
+@section scripts
+{
+    <script type="text/javascript">
+        $(function() {
+
+            $(document).ajaxError(ajaxErrors);
+            $('#loginDetails').toggle();
+
+            var loginUrl = '/Account/AjaxLogin',
+                getUrl = '/api/values',
+                requestedAction;
+
+            $('#login').click(function() {
+
+                var data = {
+                    userName: $("#username").val(),
+                    password: $("#password").val()
+                };
+
+                $('#returnedData').text('');
+                
+                makeRequest(loginUrl, data, 'POST').done(function(result) {
+                    $('#loginDetails').toggle();
+
+                    // if requestedAction has value then we need to
+                    // execute it
+                    if (requestedAction) {
+                        requestedAction();
+                    }
+                }).fail(function(result) {
+                    $('#returnedData').text(result.statusText);
+                });
+            });
+
+            $('#getById').click(function () {
+                // record the action in case we get 401 and need
+                // to execute after user is authenticated
+                requestedAction = function() {
+                    $('#getById').trigger('click');
+                };
+                makeRequest(getUrl + '/1').done(function(result) {
+                    $('#returnedData').text(result);
+                }).fail(function(result) {
+                    $('#returnedData').text(result.statusText);
+                }).always(function () {
+                    // ensure requested action is cleared
+                    requestedAction = null;
+                });
+            });
+
+            $('#getAll').click(function () {
+                requestedAction = function() {
+                    $('#getAll').trigger('click');
+                };
+                makeRequest(getUrl).done(function(result) {
+                    $('#returnedData').text(result);
+                }).fail(function(result) {
+                    $('#returnedData').text(result.statusText);
+                }).always(function () {
+                    // ensure requested action is cleared
+                    requestedAction = null;
+                });
+            });
+
+            function makeRequest(url, data, requestType) {
+
+                if (requestType === undefined) {
+                    requestType = 'GET';
+                }
+
+                var ajaxSettings = {
+                    type: requestType,
+                    url: url,
+                    data: data
+                };
+
+                return $.ajax(ajaxSettings);
+            }
+
+            function ajaxErrors(event, jqXhr) {
+                if (jqXhr.status == 401) {
+                    $('#loginDetails').toggle();
+                }
+            }
+        });
+    </script>    
+}

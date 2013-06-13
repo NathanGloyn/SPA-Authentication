@@ -1,0 +1,128 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <script src="Scripts/jquery-2.0.2.min.js"></script>
+<body>
+    <div>
+        <fieldset>
+            <legend>Login</legend>
+            <p>
+                <label for="username">Username</label>
+                <input id="username" value="bob" />
+            </p>
+            <p>
+                <label for="password">Password</label>
+                <input id="password" type="password" value="bob" />
+            </p>
+            <p>
+                <button id="login">Log in</button>&nbsp;State: &nbsp;<span id="loginStatus">Logged Out</span>
+            </p>
+        </fieldset>
+    </div>
+    <div style="margin-top: 20px">
+        <button id="getById">Get with Id</button>
+        <button id="getAll">Get All</button>
+    </div>
+    <div id="returnedData" style="margin-top: 20px;">
+    </div>
+
+    <script type="text/javascript">
+        $(function() {
+
+            // Create generic handler for ajax errors
+            // so we can deal with 401's in one place
+            $(document).ajaxError(ajaxErrors);
+
+            var scheme,
+                token,
+                loginUrl = '/api/token',
+                getUrl = '/api/values',
+                requestedAction = null;
+
+            $('#login').click(function () {
+                $('#loginStatus').text('Attempting login');
+                
+                // For our first login we need to 
+                scheme = "Basic";
+                token = createBasicAuthToken();
+
+                makeRequest(loginUrl).done(function(result) {
+                    $('#loginStatus').text('Logged in');
+
+                    // Once we have made a sucessful call we need to set the
+                    // authorization scheme to Session and extract the token
+                    // from the response
+                    scheme = 'Session';
+                    token = result.access_token;
+                
+                    // if requestedAction has value then we need to
+                    // execute it
+                    if (requestedAction) {
+                        requestedAction();
+                    }
+                }).fail(function(result) {
+                    $('#returnedData').text(result.statusText);
+                    $('#loginStatus').text('Error logging in');
+                });
+            });
+
+            $('#getById').click(function () {
+                // record the action in case we get 401 and need
+                // to execute once user is authenticated
+                requestedAction = function () {
+                    $('#getById').trigger('click');
+                };
+                
+                getRequest(getUrl + '/1');
+            });
+
+            $('#getAll').click(function () {
+                // record the action in case we get 401 and need
+                // to execute once user is authenticated
+                requestedAction = function () {
+                    $('#getAll').trigger('click');
+                };
+
+                getRequest(getUrl);
+            });
+
+            function getRequest(url) {
+                makeRequest(url).done(function (result) {
+                    $('#returnedData').text(result);
+                }).fail(function (result) {
+                    $('#returnedData').text(result.statusText);
+                }).always(function () {
+                    // ensure requestedAction is cleared
+                    requestedAction = null;
+                });
+            }
+            
+            function makeRequest(url) {
+                var ajaxSettings = {
+                    type: 'GET',
+                    url: url,
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader("Authorization", scheme + " " + token);
+                    }
+                };
+
+                return $.ajax(ajaxSettings);
+            }
+
+            function createBasicAuthToken() {
+                var uid = $("#username").val();
+                var pwd = $("#password").val();
+                
+                // the btoa call isn't ideal due to browser differeneces
+                // but is sufficent for this naive example
+                return btoa(uid + ':' + pwd);
+            }
+            
+            function ajaxErrors(event, jqXhr) {
+                if (jqXhr.status == 401) {
+                    $('#returnedData').text('User not authenticated');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
