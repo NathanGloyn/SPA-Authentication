@@ -86,6 +86,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Global.asax" />
+    <Content Include="README.md" />
     <None Include="Scripts\jquery-2.0.2.intellisense.js" />
     <Content Include="index.html" />
     <Content Include="Scripts\jquery-2.0.2.js" />
