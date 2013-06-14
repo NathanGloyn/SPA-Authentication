@@ -20,6 +20,7 @@ namespace WebApi_BasicAuth_MessageHandler
             {
                 if (UserCredentials.Validate(credentials.Name, credentials.Password))
                 {
+                    // POTENTIALLY HACK - see readme for more details
                     // check the uri, it they called the token uri then since the user
                     // only wants to login we return a 200 to signal valid user
                     if (request.RequestUri.Segments.Last().ToLower() == "token")
