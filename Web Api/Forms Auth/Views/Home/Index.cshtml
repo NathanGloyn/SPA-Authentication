@@ -61,33 +61,32 @@
 
             $('#getById').click(function () {
                 // record the action in case we get 401 and need
-                // to execute after user is authenticated
-                requestedAction = function() {
+                // to execute once user is authenticated
+                requestedAction = function () {
                     $('#getById').trigger('click');
                 };
-                makeRequest(getUrl + '/1').done(function(result) {
-                    $('#returnedData').text(result);
-                }).fail(function(result) {
-                    $('#returnedData').text(result.statusText);
-                }).always(function () {
-                    // ensure requested action is cleared
-                    requestedAction = null;
-                });
+
+                getRequest(getUrl + '/1');
             });
 
             $('#getAll').click(function () {
-                requestedAction = function() {
+                // record the action in case we get 401 and need
+                // to execute once user is authenticated
+                requestedAction = function () {
                     $('#getAll').trigger('click');
                 };
-                makeRequest(getUrl).done(function(result) {
-                    $('#returnedData').text(result);
-                }).fail(function(result) {
-                    $('#returnedData').text(result.statusText);
-                }).always(function () {
-                    // ensure requested action is cleared
-                    requestedAction = null;
-                });
+
+                getRequest(getUrl);
             });
+
+            function getRequest(url) {
+                makeRequest(url).done(function (result) {
+                    $('#returnedData').text(result);
+                    requestedAction = null;
+                }).fail(function (result) {
+                    $('#returnedData').text(result.statusText);
+                });
+            }
 
             function makeRequest(url, data, requestType) {
 
